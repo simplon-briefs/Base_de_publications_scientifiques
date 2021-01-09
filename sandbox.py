@@ -1,28 +1,27 @@
-#Lister tous les livres (type “Book”) ;
-#Lister tous les auteurs distincts
-#Compter le nombre de publications depuis 2011 et par type ;
-
-#publis_toru= db.publis.find({"authors":{'$regex':'Toru Ishida'}}, {"title":1, "_id":0})
-
-from pymongo import MongoClient 
-client = MongoClient('mongodb://localhost:27017')
+from pymongo import MongoClient
+import json
 
 
-myclient = MongoClient("mongodb://localhost:27017/")
-mydb = myclient.DBLP
-mycol = mydb.publis
+def json_to_mongodb(name_file):
+    client = MongoClient("mongodb://localhost:27017/")
 
+    list_dblp = list(open(name_file, 'r'))
 
+    percent_count = 0
+    absolute_count = 0
+    error_count = 0
 
-#compter le nombre de publication 2011 et par type
-#db.zips.distinct("state", db.zips.aggregate([ {$group:{_id:{state:"$state", city:"$city"},numberOfzipcodes:{$sum:1}}}, {$sort:{numberOfzipcodes:-1}}]))
-a = mycol.find({"year":{"$gte": 2011}})
-articles_types = a.distinct("type")
-print(list(a.rewind()))
+    for line in list_dblp:
+        try:
+            client.DBLP.publis.insert_one(json.loads(line))
+        except:
+            error_count += 1
+            print(error_count, "error(s)")
+            pass
+        absolute_count +=1
+        if int((absolute_count / len(list_dblp)) * 100) > percent_count:
+            percent_count += 1
+            print(percent_count, "%")
 
-
-
-    
-
-
-
+    print("done")
+json_to_mongodb("Database/dblp.json")
